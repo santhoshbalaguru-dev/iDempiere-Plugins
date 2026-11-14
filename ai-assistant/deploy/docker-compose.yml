@@ -1,0 +1,31 @@
+# Runs the AI service next to your existing iDempiere.
+#   Ollama:  docker compose --profile ollama up --build
+#   OpenAI:  set LLM_PROVIDER=openai and OPENAI_API_KEY in .env, then docker compose up --build
+services:
+  assistant:
+    build: ../service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${LLM_PROVIDER:-ollama}
+      IDEMPIERE_BASE_URL: ${IDEMPIERE_BASE_URL:-http://host.docker.internal:8080}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+
+volumes:
+  ollama:

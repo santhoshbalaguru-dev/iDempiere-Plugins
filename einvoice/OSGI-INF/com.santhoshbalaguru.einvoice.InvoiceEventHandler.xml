@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="true" name="com.santhoshbalaguru.einvoice.event.InvoiceEventHandler">
+   <implementation class="com.santhoshbalaguru.einvoice.event.InvoiceEventHandler"/>
+   <service>
+      <provide interface="org.osgi.service.event.EventHandler"/>
+   </service>
+   <reference name="IEventManager" interface="org.adempiere.base.event.IEventManager" bind="bindEventManager" unbind="unbindEventManager" cardinality="1..1" policy="static"/>
+</scr:component>
