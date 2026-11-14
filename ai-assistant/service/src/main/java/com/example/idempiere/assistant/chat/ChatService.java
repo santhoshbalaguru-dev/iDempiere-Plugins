@@ -2,6 +2,7 @@ package com.example.idempiere.assistant.chat;
 
 import com.example.idempiere.assistant.config.AssistantProperties;
 import com.example.idempiere.assistant.security.TokenVerifier;
+import com.example.idempiere.assistant.tools.OrderTools;
 import com.example.idempiere.assistant.tools.PurchaseOrderTools;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,6 +29,7 @@ public class ChatService {
 
     public ChatService(ChatClient.Builder builder,
                        PurchaseOrderTools purchaseOrderTools,
+                       OrderTools orderTools,
                        ConversationRegistry conversations,
                        AssistantProperties props,
                        @Value("classpath:prompts/system.txt") Resource systemPrompt) {
@@ -41,7 +43,7 @@ public class ChatService {
                 .maxMessages(props.chat().memoryMessages())
                 .build();
         this.chatClient = builder
-                .defaultTools(purchaseOrderTools)
+                .defaultTools(purchaseOrderTools, orderTools)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(memory).build())
                 .build();
     }

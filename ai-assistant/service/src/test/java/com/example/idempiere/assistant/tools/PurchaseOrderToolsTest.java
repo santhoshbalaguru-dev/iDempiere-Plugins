@@ -18,7 +18,7 @@ import org.springframework.ai.chat.model.ToolContext;
 class PurchaseOrderToolsTest {
 
     private static final String RESPONSE = """
-            {"page-count":1,"records-size":2,"row-count":1,"records":[
+            {"page-count":1,"records-size":1,"row-count":2,"records":[
               {"DocumentNo":"800001","DateOrdered":"2026-11-02","DatePromised":"2026-11-20",
                "C_BPartner_ID":{"id":118,"identifier":"Seed Farm Inc.","model-name":"c_bpartner"},
                "GrandTotal":1234.50,

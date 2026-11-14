@@ -65,7 +65,7 @@ public class PurchaseOrderTools {
                     JsonText.of(r, "C_Currency_ID"),
                     JsonText.of(r, "DocStatus")));
         }
-        int total = res.path("records-size").asInt(orders.size());
+        int total = res.path("row-count").asInt(orders.size());
         log.info("tool=getPendingPurchaseOrders returned={} total={}", orders.size(), total);
         return new PendingPurchaseOrders(orders.size(), total, orders);
     }
