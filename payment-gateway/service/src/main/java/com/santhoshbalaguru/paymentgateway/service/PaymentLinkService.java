@@ -47,17 +47,21 @@ public class PaymentLinkService {
             }
         });
 
-        // money received and not yet posted in iDempiere: never create another link
-        if (repo.existsByInvoiceIdAndStatusInAndErpPostedAtIsNull(
-                req.invoiceId(), List.of(LinkStatus.PAID))) {
+        // money received and iDempiere has not processed it yet: never create another link
+        if (repo.countUnsynced(req.invoiceId(), LinkStatus.PAID) > 0) {
             throw new ConflictException(
                     "A payment was already received for this invoice and is waiting to be posted in iDempiere");
         }
 
-        // a payment of a different amount needs a person's decision; Regenerate is that decision
-        repo.findFirstByInvoiceIdAndStatusNotOrderByIdDesc(req.invoiceId(), LinkStatus.FAILED)
-                .filter(l -> l.getStatus() == LinkStatus.AMOUNT_MISMATCH)
+
+        // the latest link needs a person's decision when it was paid with a different amount,
+        // or paid but iDempiere created no payment for it; Regenerate is that decision
+        Optional<PaymentLink> latest =
+                repo.findFirstByInvoiceIdAndStatusNotOrderByIdDesc(req.invoiceId(), LinkStatus.FAILED);
+        latest.filter(l -> l.getStatus() == LinkStatus.AMOUNT_MISMATCH)
                 .ifPresent(l -> requireMismatchReviewed(l, forceNew));
+        latest.filter(l -> l.getStatus() == LinkStatus.PAID && l.getErpPaymentId() == null)
+                .ifPresent(l -> requirePaidReviewed(l, forceNew));
 
         Optional<PaymentLink> existing =
                 repo.findByInvoiceIdAndStatus(req.invoiceId(), LinkStatus.CREATED);
@@ -129,6 +133,17 @@ public class PaymentLinkService {
         }
         if (!forceNew) {
             throw new ConflictException("A payment of a different amount was received for this invoice ("
+                    + l.getErrorMessage() + "). Review it in iDempiere, then use Regenerate to issue a new link");
+        }
+    }
+
+        /**
+     * The latest link was paid and iDempiere confirmed it, but created no payment (invoice already paid,
+     * or less open than paid). A new link is only issued on an explicit Regenerate.
+     */
+    private static void requirePaidReviewed(PaymentLink l, boolean forceNew) {
+        if (!forceNew) {
+            throw new ConflictException("A payment was received for this invoice but iDempiere did not post it ("
                     + l.getErrorMessage() + "). Review it in iDempiere, then use Regenerate to issue a new link");
         }
     }

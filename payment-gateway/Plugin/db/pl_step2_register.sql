@@ -20,7 +20,8 @@ SELECT nextidfunc((SELECT ad_sequence_id FROM ad_sequence WHERE name = 'AD_Entit
        'PL', '1.0.0', gen_random_uuid()
  WHERE NOT EXISTS (SELECT 1 FROM AD_EntityType WHERE EntityType = 'PL');
 
--- status list (values match the payment service's statuses exactly)
+-- status list (values match the payment service's statuses that iDempiere can see;
+-- the service-only status CREATING is never shown in iDempiere)
 INSERT INTO AD_Reference
     (AD_Reference_ID, AD_Client_ID, AD_Org_ID, IsActive, Created, CreatedBy, Updated, UpdatedBy,
      Name, Description, ValidationType, EntityType, AD_Reference_UU)
@@ -84,5 +85,5 @@ SELECT (SELECT COUNT(*) FROM AD_EntityType WHERE EntityType = 'PL') AS entity_ty
        (SELECT COUNT(*) FROM AD_Table WHERE TableName IN ('PL_Config', 'PL_InvoicePaymentLink')) AS tables,
        (SELECT COUNT(*) FROM AD_Sequence WHERE Name IN ('PL_Config', 'PL_InvoicePaymentLink')) AS sequences;
 
--- NEXT (UI): Table and Column -> run "Create Columns from DB" on PL_Config,
--- PL_InvoicePaymentLink and C_Invoice, then run pl_step3_columns.sql.
+-- NEXT: run pl_step3_columns.sql. No UI step is needed: step 3 inserts the column definitions itself,
+-- so "Create Columns from DB" must NOT be run.

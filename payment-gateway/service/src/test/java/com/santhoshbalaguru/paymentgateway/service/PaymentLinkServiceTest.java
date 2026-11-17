@@ -73,13 +73,42 @@ class PaymentLinkServiceTest {
 
     
 
+	private static PaymentLink paid(LinkStatus syncedStatus, Integer erpPaymentId) {
+		PaymentLink l = new PaymentLink();
+		l.setStatus(LinkStatus.PAID);
+		l.setErpSyncedStatus(syncedStatus);
+		l.setErpPaymentId(erpPaymentId);
+		l.setErrorMessage("Paid 1500.50 INR at the gateway, but only 100.00 is open on the invoice. No payment created; review needed.");
+		return l;
+	}
+
 	@Test
-	void paidAndNotYetPostedBlocksNewLinks() {
-		when(repo.existsByInvoiceIdAndStatusInAndErpPostedAtIsNull(INVOICE, List.of(LinkStatus.PAID)))
-				.thenReturn(true);
+	void paidAndNotYetSyncedBlocksNewLinks() {
+		when(repo.countUnsynced(INVOICE, LinkStatus.PAID)).thenReturn(1L);
 
 		ConflictException e = assertThrows(ConflictException.class, () -> service.createOrReuse(request(true)));
 		assertTrue(e.getMessage().contains("waiting to be posted"));
+	}
+
+	@Test
+	void reviewedPaidWithoutPaymentNeedsRegenerate() {
+		when(repo.findFirstByInvoiceIdAndStatusNotOrderByIdDesc(INVOICE, LinkStatus.FAILED))
+				.thenReturn(Optional.of(paid(LinkStatus.PAID, null)));
+
+		ConflictException e = assertThrows(ConflictException.class, () -> service.createOrReuse(request(null)));
+		assertTrue(e.getMessage().contains("use Regenerate"));
+	}
+
+	@Test
+	void reviewedPaidWithoutPaymentAllowsRegenerate() {
+		when(repo.findFirstByInvoiceIdAndStatusNotOrderByIdDesc(INVOICE, LinkStatus.FAILED))
+				.thenReturn(Optional.of(paid(LinkStatus.PAID, null)));
+		stubSuccessfulCreate();
+
+		PaymentLinkService.Result result = service.createOrReuse(request(true));
+
+		assertFalse(result.reused());
+		assertEquals(LinkStatus.CREATED, result.link().getStatus());
 	}
 
 	@Test

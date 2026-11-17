@@ -64,7 +64,13 @@ CREATE TABLE IF NOT EXISTS PL_InvoicePaymentLink (
 CREATE UNIQUE INDEX IF NOT EXISTS PL_InvoicePaymentLink_Service
     ON PL_InvoicePaymentLink (Gateway, ServiceLinkNo);
 
+-- the Payment Links tab, hasActiveLink and InvoicePaymentLinkStore.save all look links up by invoice
+CREATE INDEX IF NOT EXISTS PL_InvoicePaymentLink_Invoice
+    ON PL_InvoicePaymentLink (C_Invoice_ID, LinkStatus);
+
 -- current link, used by the mail template variable @PaymentLinkURL@
 ALTER TABLE C_Invoice ADD COLUMN IF NOT EXISTS PaymentLinkURL VARCHAR(255);
 
 COMMIT;
+
+-- NEXT: run pl_step2_register.sql

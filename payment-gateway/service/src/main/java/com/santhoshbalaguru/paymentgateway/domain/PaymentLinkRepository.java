@@ -17,8 +17,15 @@ public interface PaymentLinkRepository extends JpaRepository<PaymentLink, Long> 
 
     Optional<PaymentLink> findByGatewayAndGatewayLinkId(String gateway, String gatewayLinkId);
 
-    boolean existsByInvoiceIdAndStatusInAndErpPostedAtIsNull(Integer invoiceId,
-                                                             Collection<LinkStatus> statuses);
+    /** Links in this status whose latest status iDempiere has not confirmed yet. */
+    @Query("""
+            select count(l) from PaymentLink l
+             where l.invoiceId = :invoiceId
+               and l.status = :status
+               and (l.erpSyncedStatus is null or l.erpSyncedStatus <> l.status)
+            """)
+    long countUnsynced(@Param("invoiceId") Integer invoiceId,
+                       @Param("status") LinkStatus status);
 
     Optional<PaymentLink> findFirstByInvoiceIdAndStatusNotOrderByIdDesc(Integer invoiceId,
                                                                         LinkStatus status);
