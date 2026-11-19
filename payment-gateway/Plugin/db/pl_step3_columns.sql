@@ -1,4 +1,4 @@
--- Step 3: elements and column definitions for the payment link plugin (entity type PL).
+	-- Step 3: elements and column definitions for the payment link plugin (entity type PL).
 -- Same approach as einvoice_setup.sql: AD_Element rows, then AD_Column rows inserted directly.
 -- "Create Columns from DB" in the UI is no longer needed.
 -- Safe to re-run. It also REPAIRS columns that already exist (IsUpdateable, references, lengths...),
